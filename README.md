@@ -43,81 +43,47 @@
 
 ## 安装
 
-三步。每步都有一句「怎么确认成功」。
+三种走法，从省事到好奇：让 AI 助手读安装单、自己跑一条命令、或者手动一步一步来。
 
-### ① 先让 DSH 跑起来
+### ① 把它交给你的 AI 助手（推荐）
 
-需要 Node.js 24.9+ 和 DSH 0.2.2+。
+把下面这段原样丢给你的 AI 助手（能在这台机器上跑命令的都行）：
 
-```powershell
-npm i -g @deepseek-ai/dsh
-dsh web
-```
+> 帮我装 https://github.com/pydsl43/suishouwen ：读 INSTALL.md，按里面装后端，装完访问 http://127.0.0.1:3080/page-chat/health 确认，再告诉我在浏览器里怎么加载扩展。
 
-浏览器打开 `http://127.0.0.1:3080`，能看到 DSH 的页面就算成功。这个地址也是扩展默认连接的地址。
+它会 clone 仓库、跑 `scripts/install.ps1`、把 health 的结果贴给你，最后告诉你浏览器里点哪儿。整个过程只动 DSH 的 `web` profile，出问题能一条命令回滚。
 
-### ② 装后端插件
+前置条件还是那两样：Node.js 24.9+，和 DSH 0.2.2+ 且至少跑过一次（`~/.dsh/profiles/web/` 存在）。
 
-插件本体在仓库的 `plugin/` 目录（包名 `@pydsl/dsh-page-chat`，版本 0.2.0）。把它挂进 DSH 的 `web` profile。
-
-**1. 在 profile 的 `package.json` 里加依赖**
-
-编辑 `~/.dsh/profiles/web/package.json`，在 `dependencies` 里加一行，路径换成你本机的绝对路径：
-
-```json
-"@pydsl/dsh-page-chat": "file:D:/path/to/suishouwen/plugin"
-```
-
-**2. 建目录联接**
-
-在 profile 的 `node_modules/@pydsl/` 下建一个联接（junction，可以理解成给目录开一个快捷方式），指向同一个 `plugin/` 目录：
+### ② 或者自己跑一条命令
 
 ```powershell
-$profileDir = "$HOME\.dsh\profiles\web"
-New-Item -ItemType Directory -Force "$profileDir\node_modules\@pydsl" | Out-Null
-New-Item -ItemType Junction `
-  -Path "$profileDir\node_modules\@pydsl\dsh-page-chat" `
-  -Target "D:\path\to\suishouwen\plugin"
+git clone https://github.com/pydsl43/suishouwen
+cd suishouwen
+powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1 -DryRun   # 先看它要做什么，不落盘
+powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1            # 真装
 ```
 
-**3. 在 `cordis.patch.yml` 里挂上插件**
+这一条把原来的三步一次做完：写依赖、建目录联接、往 `cordis.patch.yml` 追加那段配置。重复跑不会重复插入；动任何文件前先备份到 `~/.dsh/.backup-page-chat-<时间戳>/`。
 
-编辑 `~/.dsh/profiles/web/cordis.patch.yml`，insert 一条。仓库里的 `plugin/cordis.patch.yml` 可以直接照抄：
+装完打开 `http://127.0.0.1:3080/page-chat/health`，看到 `{"ok":true,"dshReady":true,"version":"0.2.0"}` 就成了。
 
-```yaml
-- insert:
-    - id: page-chat
-      name: '@pydsl/dsh-page-chat'
-      config:
-        memoryDir: !!js dshHomePath('page-chat-memory')
-        maxTurns: 20
-```
+**扩展还是得手工加载**：Chrome / Edge / Brave 打开 `chrome://extensions` → 开发者模式 → 加载已解压的扩展程序 → 选仓库里的 `extension/`；Firefox / Zen 先 `node build-firefox.mjs`，再打开 `about:debugging#/runtime/this-firefox` → 临时载入附加组件 → 选 `_dist-firefox/manifest.json`。
 
-**4. 重启 `dsh web`。**
+**怎么确认成功**：普通网页里选中 2 个字以上，选区右下角出现「随手问」浮标；点开问一句，能收到回答。
 
-**怎么确认成功**：打开 `http://127.0.0.1:3080/page-chat/health`，应该看到类似：
+装不上看 [`docs/INSTALL-FAQ.md`](docs/INSTALL-FAQ.md)；想撤就 `powershell -ExecutionPolicy Bypass -File .\scripts\uninstall.ps1`，它会清干净并告诉你记忆目录在哪。
 
-```json
-{ "ok": true, "dshReady": true, "version": "0.2.0" }
-```
+### ③ 手动装（想搞清楚每一步）
 
-`sessions` 和 `now` 每次会变；`ok`、`dshReady`、`version` 对得上就行。
+想看清每步到底改了什么，就照这个顺序来。细节、参数、排错都在 [`INSTALL.md`](INSTALL.md)。
 
-### ③ 装扩展
-
-**Chrome / Edge / Brave**
-
-1. 打开 `chrome://extensions`。
-2. 右上角打开「开发者模式」。
-3. 点「加载已解压的扩展程序」，选仓库里的 `extension/` 目录。
-
-**Firefox / Zen**
-
-1. 在仓库根目录运行 `node build-firefox.mjs`，它会生成 `_dist-firefox/`。
-2. 打开 `about:debugging#/runtime/this-firefox`。
-3. 点「临时载入附加组件」，选 `_dist-firefox/manifest.json`。
-
-**怎么确认成功**：在普通网页里选中 2 个字以上，选区右下角出现「随手问」浮标；点开小框，问一句，能收到回答。Firefox/Zen 的临时扩展在重启浏览器后会消失，要重新载入。
+1. **让 DSH 先跑起来**：`npm i -g @deepseek-ai/dsh`，然后 `dsh web`，浏览器能打开 `http://127.0.0.1:3080`。
+2. **在 profile 的 `package.json` 里加依赖**：`"@pydsl/dsh-page-chat": "file:D:/path/to/suishouwen/plugin"`（换成你本机的绝对路径）。
+3. **建目录联接**：`profiles/web/node_modules/@pydsl/dsh-page-chat` 指向同一个 `plugin/` 目录，`New-Item -ItemType Junction` 一条命令。
+4. **在 `cordis.patch.yml` 里 insert 一条**：`id: page-chat`、`name: '@pydsl/dsh-page-chat'`，config 照抄仓库里的 `plugin/cordis.patch.yml`。
+5. **重启 `dsh web`**，再打开 `http://127.0.0.1:3080/page-chat/health` 确认。
+6. **加载扩展**：步骤同上面 ② 的最后一段。
 
 ## 它怎么工作
 
