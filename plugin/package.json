@@ -1,0 +1,32 @@
+{
+  "name": "@pydsl/dsh-page-chat",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "在网页里随手问 DSH：宿主插件版（路由 + 会话池 + 记忆注入面 + 网页记忆面板）",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "test",
+    "docs",
+    "icon.svg"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-locale"
+      ]
+    }
+  }
+}

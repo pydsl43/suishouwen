@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" role="img" aria-labelledby="heroTitle heroDesc">
+  <title id="heroTitle">随手问界面示意</title>
+  <desc id="heroDesc">左边是网页文章，一句被选中并出现随手问浮标；右边是回答小框；再右边是本地 DSH。</desc>
+
+  <defs>
+    <marker id="arrowGray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#94a3b8"/>
+    </marker>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#3b82f6"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="560" fill="#f8fafc"/>
+
+  <!-- 左边：网页文章 -->
+  <g>
+    <rect x="48" y="64" width="520" height="432" rx="16" fill="#ffffff" stroke="#e2e8f0"/>
+    <text x="72" y="96" font-family="system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif" font-size="11" fill="#94a3b8">网页</text>
+
+    <rect x="72" y="112" width="238" height="16" rx="8" fill="#cbd5e1"/>
+    <rect x="72" y="146" width="126" height="8" rx="4" fill="#e2e8f0"/>
+
+    <rect x="72" y="190" width="440" height="10" rx="5" fill="#e2e8f0"/>
+    <rect x="72" y="214" width="402" height="10" rx="5" fill="#e2e8f0"/>
+    <rect x="72" y="238" width="430" height="10" rx="5" fill="#e2e8f0"/>
+    <rect x="72" y="262" width="366" height="10" rx="5" fill="#e2e8f0"/>
+
+    <!-- 选中句 -->
+    <rect x="72" y="296" width="440" height="56" rx="8" fill="#eff6ff" stroke="#bfdbfe"/>
+    <text x="90" y="331" font-family="system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif" font-size="18" fill="#1d4ed8">“这段话到底是什么意思？”</text>
+
+    <!-- 选区右下角的浮标 -->
+    <path d="M 460 352 L 468 360 L 476 352 Z" fill="#3b82f6"/>
+    <rect x="424" y="360" width="88" height="30" rx="15" fill="#3b82f6"/>
+    <text x="468" y="380" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#ffffff">随手问</text>
+
+    <rect x="72" y="392" width="440" height="9" rx="4.5" fill="#e2e8f0"/>
+    <rect x="72" y="414" width="408" height="9" rx="4.5" fill="#e2e8f0"/>
+    <rect x="72" y="436" width="428" height="9" rx="4.5" fill="#e2e8f0"/>
+    <rect x="72" y="458" width="352" height="9" rx="4.5" fill="#e2e8f0"/>
+  </g>
+
+  <!-- 浮标到小框的虚线 -->
+  <path d="M 516 375 C 552 375 560 248 596 248" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5 5" marker-end="url(#arrowBlue)"/>
+  <!-- 右边：回答小框 -->
+  <g>
+    <rect x="600" y="96" width="350" height="400" rx="16" fill="#ffffff" stroke="#e2e8f0"/>
+    <text x="624" y="128" font-family="system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif" font-size="17" font-weight="600" fill="#0f172a">随手问</text>
+    <circle cx="910" cy="122" r="4" fill="#3b82f6"/>
+    <text x="922" y="126" font-family="system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif" font-size="11" fill="#64748b">本地</text>
+    <line x1="600" y1="146" x2="950" y2="146" stroke="#f1f5f9"/>
+
+    <!-- 问 -->
+    <rect x="690" y="164" width="236" height="42" rx="14" fill="#3b82f6"/>
+    <text x="910" y="190" text-anchor="end" font-family="system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif" font-size="13" fill="#ffffff">这段话什么意思？</text>
+
+    <!-- 答 -->
+    <rect x="624" y="222" width="286" height="70" rx="14" fill="#f1f5f9"/>
+    <text x="640" y="249" font-family="system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif" font-size="13" fill="#334155">它说的是：先看结论，</text>
+    <text x="640" y="270" font-family="system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif" font-size="13" fill="#334155">再看证据。</text>
+
+    <text x="624" y="330" font-family="system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif" font-size="11" fill="#94a3b8">多轮追问，记得上下文</text>
+
+    <!-- 记住这段 -->
+    <rect x="624" y="350" width="92" height="26" rx="13" fill="#ffffff" stroke="#cbd5e1"/>
+    <text x="670" y="367" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif" font-size="11" fill="#475569">记住这段</text>
+
+    <!-- 输入框 -->
+    <rect x="620" y="420" width="310" height="44" rx="12" fill="#ffffff" stroke="#cbd5e1"/>
+    <text x="636" y="447" font-family="system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif" font-size="13" fill="#94a3b8">接着问…</text>
+    <circle cx="904" cy="442" r="12" fill="#3b82f6"/>
+    <path d="M 899 442 L 909 442 M 905 438 L 909 442 L 905 446" fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- 小框到 DSH 的虚线 -->
+  <path d="M 956 266 L 1008 266" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5 5" marker-end="url(#arrowGray)"/>
+  <text x="982" y="252" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif" font-size="9" fill="#94a3b8">本地 HTTP</text>
+
+  <!-- 右边：DSH -->
+  <g>
+    <rect x="1016" y="210" width="118" height="112" rx="24" fill="#0f172a"/>
+    <text x="1075" y="274" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif" font-size="26" font-weight="700" fill="#ffffff">DSH</text>
+    <text x="1075" y="348" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif" font-size="11" fill="#64748b">本地 agent</text>
+    <text x="1075" y="364" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif" font-size="11" fill="#64748b">运行器</text>
+  </g>
+
+  <text x="48" y="536" font-family="system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif" font-size="12" fill="#94a3b8">选中文字，点浮标，答案就在当前页。</text>
+  <text x="1152" y="536" text-anchor="end" font-family="system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif" font-size="11" fill="#cbd5e1">界面示意 · 非截图</text>
+</svg>

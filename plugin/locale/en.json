@@ -1,0 +1,11 @@
+{
+  "meta": {
+    "title": "Ask DSH from any page",
+    "description": "Select text or drag a screenshot region in the browser to ask DSH; saved conversations become local cards that DSH can use right after a sync."
+  },
+  "panel": {
+    "title": "Web memory",
+    "subtitle": "Pages you asked DSH about in the browser. Deleting here is permanent.",
+    "tabLabel": "Web memory"
+  }
+}

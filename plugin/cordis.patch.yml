@@ -1,0 +1,15 @@
+# page-chat：把「网页里随手问 DSH」做成 DSH 插件
+# 装法：web profile 的 package.json 依赖里加 "file:<本仓库 plugin 目录的绝对路径>"，
+# 再由 profile 的 cordis.patch.yml 插入下面这条。回退：删本条 + 重启 dsh web。
+- insert:
+    - id: page-chat
+      name: '@pydsl/dsh-page-chat'
+      config:
+        # 记忆库落盘位置。默认放在 DSH 家目录下，跟会话日志分开。
+        # 想放到别处就改成绝对路径，例如 D:/somewhere/page-chat-memory
+        memoryDir: !!js dshHomePath('page-chat-memory')
+        # 网页侧会话最多几轮（防上下文无限长）
+        maxTurns: 20
+        # 可选：看板插件（@pydsl/dsh-board-plugin）的地址，「存成看板卡」用它。
+        # 不装看板插件就留空，按钮会回「看板插件没装或没开」。
+        # boardBase: http://127.0.0.1:3080

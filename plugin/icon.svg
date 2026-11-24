@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="page chat">
+  <rect x="4" y="8" width="56" height="44" rx="8" fill="#1f2937"/>
+  <rect x="10" y="14" width="44" height="32" rx="5" fill="#f9fafb"/>
+  <path d="M18 22h20M18 29h28M18 36h14" stroke="#9ca3af" stroke-width="3" stroke-linecap="round"/>
+  <path d="M40 44l4-10 4 10-4-3z" fill="#2563eb"/>
+  <path d="M44 48v10l8-6z" fill="#2563eb"/>
+</svg>
