@@ -1,6 +1,6 @@
 {
   "name": "@pydsl/dsh-page-chat",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "type": "module",
   "description": "在网页里随手问 DSH：宿主插件版（路由 + 会话池 + 记忆注入面 + 网页记忆面板）",

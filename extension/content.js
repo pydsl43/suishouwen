@@ -10,7 +10,67 @@
 
   const KEY_STORE = 'dsh-chat-key';
   const POS_STORE = 'dsh-chat-pos';
-  const NO_DSH = '连不上 DSH（127.0.0.1:3080 没在跑？）';
+
+  // DSH 地址：默认值只写这一处（background.js / options.js 各有一份同名常量，三个一起改）。
+  // 用户能在扩展设置页改，存在 storage.local 的 baseUrl；这里只用来把「连不上」说得具体。
+  const DEFAULT_BASE = 'http://127.0.0.1:3080';
+  const BASE_KEY = 'baseUrl';
+
+  function normalizeBase(raw) {
+    const text = typeof raw === 'string' ? raw.trim() : '';
+    if (!text) return DEFAULT_BASE;
+    const withScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(text) ? text : 'http://' + text;
+    try {
+      const u = new URL(withScheme);
+      if (u.protocol !== 'http:' && u.protocol !== 'https:') return DEFAULT_BASE;
+      if (!u.hostname) return DEFAULT_BASE;
+      return u.protocol + '//' + u.host + u.pathname.replace(/\/+$/, '');
+    } catch {
+      return DEFAULT_BASE;
+    }
+  }
+
+  let baseUrl = DEFAULT_BASE;
+
+  function applyBase(raw) {
+    baseUrl = normalizeBase(raw);
+  }
+
+  function readStoredBase() {
+    try {
+      const ext = globalThis.browser || chrome;
+      const st = ext && ext.storage;
+      if (!st || !st.local || typeof st.local.get !== 'function') return;
+      const ret = st.local.get(BASE_KEY, (obj) => {
+        void chrome.runtime.lastError;
+        applyBase(obj && obj[BASE_KEY]);
+      });
+      if (ret && typeof ret.then === 'function') {
+        ret.then((obj) => applyBase(obj && obj[BASE_KEY]), () => {});
+      }
+    } catch {}
+  }
+
+  function watchBase() {
+    try {
+      const ext = globalThis.browser || chrome;
+      const st = ext && ext.storage;
+      if (!st || !st.onChanged || typeof st.onChanged.addListener !== 'function') return;
+      st.onChanged.addListener((changes, area) => {
+        if (area && area !== 'local') return;
+        if (!changes || !Object.prototype.hasOwnProperty.call(changes, BASE_KEY)) return;
+        applyBase(changes[BASE_KEY] && changes[BASE_KEY].newValue);
+      });
+    } catch {}
+  }
+
+  readStoredBase();
+  watchBase();
+
+  // 连不上时给用户看的话：带上「现在配的那个地址」，并指路设置页。
+  function noDshText() {
+    return '连不上 DSH（' + baseUrl + ' 没在跑？），点工具栏图标 → 设置里可以改地址';
+  }
 
   let host = null;      // shadow host
   let root = null;      // shadow root
@@ -46,6 +106,10 @@
     }
 
     root.querySelector('.close').addEventListener('click', close);
+    root.querySelector('.gear').addEventListener('click', () => {
+      // 内容脚本没有 openOptionsPage 权限，交给后台开（工具栏图标右键也走这里）。
+      chrome.runtime.sendMessage({ type: 'dsh-open-options' }, () => void chrome.runtime.lastError);
+    });
     root.querySelector('.fresh').addEventListener('click', () => {
       const key = chatKey();
       sessionStorage.removeItem(KEY_STORE);
@@ -84,7 +148,7 @@
     const bar = root.querySelector('.bar');
     let sx = 0, sy = 0, ox = 0, oy = 0, dragging = false;
     bar.addEventListener('mousedown', (e) => {
-      if (e.target.closest('.close, .fresh, .board')) return;
+      if (e.target.closest('.close, .fresh, .board, .gear')) return;
       const r = panel.getBoundingClientRect();
       sx = e.clientX; sy = e.clientY; ox = r.left; oy = r.top; dragging = true;
       e.preventDefault();
@@ -215,7 +279,7 @@
       resetMemoBtn();
       chrome.runtime.sendMessage({ type: 'dsh-memorize-undo', id }, (res) => {
         void chrome.runtime.lastError;
-        systemNote(res && res.ok ? '已撤销，这段没留下。' : '撤销没成功：' + ((res && res.error) || NO_DSH));
+        systemNote(res && res.ok ? '已撤销，这段没留下。' : '撤销没成功：' + ((res && res.error) || noDshText()));
       });
       return;
     }
@@ -240,7 +304,7 @@
         btn.disabled = false;
         if (!res || res.error || !res.card) {
           btn.textContent = '记住这段';
-          systemNote('没记住：' + ((res && res.error) || NO_DSH));
+          systemNote('没记住：' + ((res && res.error) || noDshText()));
           return;
         }
         memoId = res.card.id;
@@ -286,7 +350,7 @@
         void chrome.runtime.lastError;
         if (!res || res.error || !res.cardId) {
           resetBoardBtn();
-          systemNote('没存进看板：' + ((res && res.error) || NO_DSH));
+          systemNote('没存进看板：' + ((res && res.error) || noDshText()));
           return;
         }
         btn.disabled = false;
@@ -344,7 +408,7 @@
         pending.classList.remove('pending');
         if (!res || res.error) {
           pending.classList.add('err');
-          pending.textContent = '没问成：' + ((res && res.error) || NO_DSH);
+          pending.textContent = '没问成：' + ((res && res.error) || noDshText());
           return;
         }
         pending.textContent = '';
@@ -793,6 +857,7 @@
     <span class="title">随手问</span>
     <button class="ghost memo" title="把这段聊的存成记忆卡（点一下撤销）">记住这段</button>
     <button class="ghost board" title="把这段聊的存成看板上的一张卡">存成看板卡</button>
+    <button class="ghost gear" title="改 DSH 地址（端口换了就连不上）">设置</button>
     <button class="ghost fresh" title="忘掉上面聊的">新对话</button>
     <button class="ghost close" title="Esc">关闭</button>
   </div>

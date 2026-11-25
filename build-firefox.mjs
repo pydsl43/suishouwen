@@ -7,7 +7,9 @@ import { fileURLToPath } from 'node:url';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SRC = path.join(HERE, 'extension');
 const OUT = path.join(HERE, '_dist-firefox');
-const files = ['background.js', 'content.js'];
+// manifest.firefox.json 指向 options.html，所以设置页的两个文件也要一起进包，
+// 否则火狐/ Zen 里点「设置」是 404。
+const files = ['background.js', 'content.js', 'options.html', 'options.js'];
 
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(OUT, { recursive: true });

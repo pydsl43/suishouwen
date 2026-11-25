@@ -556,6 +556,7 @@ try {
   Write-Host '下一步：装浏览器扩展'
   Write-Host "  Chrome / Edge / Brave：打开 chrome://extensions -> 开发者模式 -> 加载已解压的扩展程序 -> 选 $repoRoot\extension"
   Write-Host '  Firefox / Zen：先在仓库根目录运行  node build-firefox.mjs ，再打开 about:debugging#/runtime/this-firefox -> 临时载入附加组件 -> 选 _dist-firefox\manifest.json'
+  Write-Host '装完打开 http://127.0.0.1:3080/page-chat/setup 自检，页面会自己亮绿灯'
   Write-Host ''
   Write-Host '怎么确认整条链路：普通网页里选中两个字以上，选区右下角出现「随手问」小浮标，点开能收到回答。'
   Write-Host ''

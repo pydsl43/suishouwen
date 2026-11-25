@@ -4,6 +4,7 @@
  * 只注册一条 `/page-chat` 前缀路由（多条会撞「路由已存在」），内部按路径分发：
  *
  *   GET  /page-chat/health          → { ok, dshReady, sessions, version, now }
+ *   GET  /page-chat/setup           → 自包含安装向导页（HTML，内联 CSS/JS）
  *   POST /page-chat/ping            → 扩展启动时报到（版本 / 浏览器 / 站点），落盘
  *   GET  /page-chat/installed       → 扩展装没装 / 上次报到的版本与时间
  *   POST /page-chat/ask             → NDJSON：{ack} → {delta}* → {done} / {error}
@@ -35,6 +36,7 @@ import { createMemory, siteOf } from './memory.js';
 import { createCompressor } from './compress.js';
 import { createSync } from './sync.js';
 import { createSummarizer } from './summarizer.js';
+import { renderSetupPage } from './setup-page.js';
 
 /** 前缀（无尾斜杠：宿主按 `pathname === prefix || pathname.startsWith(prefix + '/')` 匹配）。 */
 const PREFIX = '/page-chat';
@@ -43,7 +45,7 @@ const PREFIX = '/page-chat';
 const BODY_MAX = 20 * 1024 * 1024;
 
 /** 插件版本（健康检查里报给扩展，方便判断要不要升级）。 */
-const PLUGIN_VERSION = '0.2.0';
+const PLUGIN_VERSION = '0.2.1';
 
 /** 记忆注入段在系统提示里的名字 / 位置（排在工具说明之后、SDK 说明之前）。 */
 const MEMORY_SECTION_NAME = 'page-chat-memory';
@@ -92,6 +94,20 @@ function sendJson(res, status, payload) {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('Content-Length', String(Buffer.byteLength(body)));
     res.end(body);
+  } catch {
+    /* 连接已经断了 */
+  }
+}
+
+/** 回一个 HTML 响应（自检页用；不允许缓存，状态必须每次现查）。 */
+function sendHtml(res, status, html) {
+  try {
+    if (res.writableEnded) return;
+    res.statusCode = status;
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Content-Length', String(Buffer.byteLength(html)));
+    res.end(html);
   } catch {
     /* 连接已经断了 */
   }
@@ -1015,6 +1031,15 @@ export function createHandler(sessions, deps = {}) {
           return;
         }
         healthHandler(res, sessions);
+        return;
+      }
+
+      if (pathname === `${PREFIX}/setup`) {
+        if (method !== 'GET') {
+          sendJson(res, 405, { ok: false, error: 'setup 只认 GET' });
+          return;
+        }
+        sendHtml(res, 200, renderSetupPage(PLUGIN_VERSION));
         return;
       }
 

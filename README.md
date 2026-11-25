@@ -5,7 +5,7 @@
 随口一句，它接得住。
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.4.5-blue)](extension/manifest.json)
+[![Version](https://img.shields.io/badge/version-0.4.6-blue)](extension/manifest.json)
 [![Platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Firefox-4285f4)](#兼容性)
 ![DSH](https://img.shields.io/badge/DSH-%E2%89%A5%200.2.2-111827)
 
@@ -38,35 +38,49 @@
 | 答案渐显 | 回答像打字一样逐字铺开，不是整段砸出来；实际开始时间取决于模型。 |
 | 主会话可查 | DSH 主会话能用 `memory_search` 按站点和关键词翻卡，用 `memory_open` 看原文。 |
 | 存成看板卡 | 点一下，把这段对话连同来源链接丢进 DSH 的看板，变成一张待办卡（需要另装看板插件）。 |
-| 一份源码两处用 | Chrome 系吃 MV3；Firefox/Zen 用 `node build-firefox.mjs` 从同一份源码组出 MV2 包。 |
+| 一份源码两处用 | Chrome 系吃 MV3；Firefox/Zen 用同一份源码打成 MV2 包，Release 里直接下签好的。 |
 | 全本地 | 没有作者的中转服务器，记忆落在本机；模型是不是本地，取决于你配的接口。 |
 
 ## 安装
 
-三种走法，从省事到好奇：让 AI 助手读安装单、自己跑一条命令、或者手动一步一步来。
+装法从省事到好奇：先下装好的扩展包（⓪），双击一下把 DSH 插件装上（①），或者交给你的 AI 助手（②）、自己跑一条命令（③）、手动一步一步来（④）。
 
 ### ⓪ 直接下装好的包
 
-扩展已经由 Mozilla 签过名，不用自己编译：
+Firefox 版已经由 Mozilla 签过名，不用自己编译、也不用开发者模式；Chrome 版也不用编译，解压就能装：
 
-- **Firefox / Zen**：[`suishouwen-0.4.5-firefox-signed.xpi`](https://github.com/pydsl43/suishouwen/releases/latest/download/suishouwen-0.4.5-firefox-signed.xpi) → 打开 `about:addons` → 右上角齿轮 → **从文件安装附加组件** → 选它。装完就在扩展列表里，重启浏览器不用重新加载。
-- **Chrome / Edge / Brave**：[`suishouwen-0.4.5-chrome.zip`](https://github.com/pydsl43/suishouwen/releases/latest/download/suishouwen-0.4.5-chrome.zip) → 解压 → `chrome://extensions` → 开发者模式 → 加载已解压的扩展程序 → 选解压出来的文件夹。
+- **Firefox / Zen**：[`suishouwen-0.4.6-firefox-signed.xpi`](https://github.com/pydsl43/suishouwen/releases/latest/download/suishouwen-0.4.6-firefox-signed.xpi) → 打开 `about:addons` → 右上角齿轮 → **从文件安装附加组件** → 选它。装完就在扩展列表里，重启浏览器不用重新加载。
+- **Chrome / Edge / Brave**：[`suishouwen-0.4.6-chrome.zip`](https://github.com/pydsl43/suishouwen/releases/latest/download/suishouwen-0.4.6-chrome.zip) → 解压 → `chrome://extensions` → 开发者模式 → 加载已解压的扩展程序 → 选解压出来的文件夹。
 
 校验和在同页的 `SHA256SUMS.txt` 里。
 
-**但扩展只是个空壳**：它要连上本机的 DSH 插件才有脑子。所以第一次装还是要往下走 ①或②（装插件），扩展本身这两步就能装好。
+**但扩展只是个空壳**：它要连上本机的 DSH 插件才有脑子。所以第一次装还是要往下走 ①或②（装插件），扩展本身这一步就能装好。
 
-### ① 把它交给你的 AI 助手（推荐）
+### ① 双击一下装上（Windows / macOS）
+
+先把仓库下下来（绿色的 `Code` → `Download ZIP`，或者 `git clone https://github.com/pydsl43/suishouwen`），然后：
+
+| 你的系统 | 点这个 | 会发生什么 |
+| --- | --- | --- |
+| Windows | 双击 **`一键安装.bat`** | 黑窗口跑完，把插件写进 DSH 的 `web` profile，最后给你一个地址 `http://127.0.0.1:<端口>/page-chat/setup` |
+| macOS | 双击 **`install.command`**（第一次可能要先 `chmod +x install.command`） | 同上 |
+| Linux / 终端 | `bash install.sh` | 同上 |
+
+双击之后**不用重启也能用**：插件会热加载，跑完访问那个 `/page-chat/setup` 地址就是一页自检向导——它在页面上直接告诉你扩展装没装上（扩展连上会自己报到，页面 2 秒自动变绿，不用刷新）。
+
+三个平台跑的是同一份 `scripts/install.mjs`，参数也一致：`--port 3081` 换端口、`--dry-run` 只说不做、`--dsh-home` / `--profile` 指别处。默认端口 3080，环境变量 `DSH_WEB_PORT` 也能改。
+
+### ② 把它交给你的 AI 助手（推荐）
 
 把下面这段原样丢给你的 AI 助手（能在这台机器上跑命令的都行）：
 
-> 帮我装 https://github.com/pydsl43/suishouwen ：读 INSTALL.md，按里面装后端，装完访问 http://127.0.0.1:3080/page-chat/health 确认，再告诉我在浏览器里怎么加载扩展。
+> 帮我装 https://github.com/pydsl43/suishouwen ：读 INSTALL.md，按里面装后端，装完访问 http://127.0.0.1:3080/page-chat/health 确认，再告诉我在浏览器里怎么装扩展（Firefox / Zen 用签名包，Chrome 解压加载）。
 
 它会 clone 仓库、跑 `scripts/install.ps1`、把 health 的结果贴给你，最后告诉你浏览器里点哪儿。整个过程只动 DSH 的 `web` profile，出问题能一条命令回滚。
 
 前置条件还是那两样：Node.js 24.9+，和 DSH 0.2.2+ 且至少跑过一次（`~/.dsh/profiles/web/` 存在）。
 
-### ② 或者自己跑一条命令
+### ③ 或者自己跑一条命令
 
 ```powershell
 git clone https://github.com/pydsl43/suishouwen
@@ -77,15 +91,15 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1            # 真�
 
 这一条把原来的三步一次做完：写依赖、建目录联接、往 `cordis.patch.yml` 追加那段配置。重复跑不会重复插入；动任何文件前先备份到 `~/.dsh/.backup-page-chat-<时间戳>/`。
 
-装完打开 `http://127.0.0.1:3080/page-chat/health`，看到 `{"ok":true,"dshReady":true,"version":"0.2.0"}` 就成了。
+装完打开 `http://127.0.0.1:3080/page-chat/health`，看到 `{"ok":true,"dshReady":true,"version":"0.2.1"}` 就成了。再说一句：这个版本开始，装完就能打开 `http://127.0.0.1:3080/page-chat/setup` 看一页自检向导。
 
-**扩展这块，两条路**：Firefox / Zen 直接下①里的签名包，`about:addons` → 齿轮 → 从文件安装，一次装好、重启还在；Chrome / Edge / Brave 解压 zip → `chrome://extensions` → 开发者模式 → 加载已解压的扩展程序。想在命令行里多要一步，仓库里有 `scripts/install-extension.ps1`：它会打开对的页面、把路径塞进剪贴板，然后轮询等扩展连上，装好了直接告诉你。装完访问 `http://127.0.0.1:3080/page-chat/installed` 也能自检：看到 `installed:true` 与版本号就是真装上了。
+**扩展这块，两条路**：Firefox / Zen 直接下 ⓪ 里的签名包，`about:addons` → 齿轮 → 从文件安装，一次装好、重启还在；Chrome / Edge / Brave 解压 zip → `chrome://extensions` → 开发者模式 → 加载已解压的扩展程序（Chrome 稳定版不接受自签名 `.crx`，这是唯一的本地装法）。想在命令行里多要一步，仓库里有 `scripts/install-extension.ps1`：它会打开对的页面、把路径塞进剪贴板，然后轮询等扩展连上，装好了直接告诉你。装完访问 `http://127.0.0.1:3080/page-chat/installed` 也能自检：看到 `installed:true` 与版本号就是真装上了。
 
 **怎么确认成功**：普通网页里选中 2 个字以上，选区右下角出现「随手问」浮标；点开问一句，能收到回答。
 
 装不上看 [`docs/INSTALL-FAQ.md`](docs/INSTALL-FAQ.md)；想撤就 `powershell -ExecutionPolicy Bypass -File .\scripts\uninstall.ps1`，它会清干净并告诉你记忆目录在哪。
 
-### ③ 手动装（想搞清楚每一步）
+### ④ 手动装（想搞清楚每一步）
 
 想看清每步到底改了什么，就照这个顺序来。细节、参数、排错都在 [`INSTALL.md`](INSTALL.md)。
 
@@ -94,7 +108,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1            # 真�
 3. **建目录联接**：`profiles/web/node_modules/@pydsl/dsh-page-chat` 指向同一个 `plugin/` 目录，`New-Item -ItemType Junction` 一条命令。
 4. **在 `cordis.patch.yml` 里 insert 一条**：`id: page-chat`、`name: '@pydsl/dsh-page-chat'`，config 照抄仓库里的 `plugin/cordis.patch.yml`。
 5. **重启 `dsh web`**，再打开 `http://127.0.0.1:3080/page-chat/health` 确认。
-6. **加载扩展**：步骤同上面 ② 的最后一段。
+6. **装浏览器扩展**：Firefox / Zen 下 ⓪ 里的签名包 → 从文件安装；Chrome / Edge 解压 zip → 加载已解压。细节见 [`INSTALL.md`](INSTALL.md) 第三步。
 
 ## 它怎么工作
 
@@ -118,21 +132,28 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1            # 真�
 
 | 浏览器 | 清单 | 状态 | 说明 |
 | --- | --- | --- | --- |
-| Chrome / Edge / Brave | MV3 | 可用 | 直接「加载已解压」`extension/` |
-| Firefox / Zen | MV2 | 可用（临时载入） | 先 `node build-firefox.mjs`；要求 Firefox 142+ |
+| Chrome / Edge / Brave | MV3 | 可用 | 解压 zip 后「加载已解压」 |
+| Firefox / Zen | MV2 | 可用（Mozilla 签名包） | 下 `.xpi` 后从文件安装；要求 Firefox 142+ |
 | Safari | — | 暂不支持 | 需要单独打包和签名，仓库里没有 |
 
-Firefox/Zen 的临时扩展重启浏览器就掉，这是临时载入本身的限制，不是插件坏了。
+Firefox / Zen 装的是 Mozilla 签好名的包，重启浏览器不会掉；扩展身份是 `suishouwen@pydsl.dev`。它没有上架商店，所以只能手动从文件安装。
 
 ## 已知限制
 
-1. Firefox/Zen 的临时扩展重启浏览器就掉；Chrome 的已解压扩展一般会留着，但换目录或改文件后可能要重新加载。
+1. 未上架扩展商店：Firefox / Zen 要在 `about:addons` 里「从文件安装」签名的 `.xpi`，Chrome / Edge 只能解压加载（稳定版不接受自签名 `.crx`）。商店里搜不到，也没有自动更新——换版本要重新下载安装。Chrome 解压加载的扩展一般会留着，但换目录或改文件后可能要在扩展页点一次「重新加载」。
 2. 会话按标签页分开：每个标签页各聊各的，关掉标签页这段对话就没了；想在同一页重开，点小框里的「新对话」。
 3. 回答不是网络逐字流：扩展会等这一轮 NDJSON 收完，再在小框里逐字铺开；很长的回答，前期要等。
 4. 记忆卡不会自动进网页小框；网页会话看不到卡，也调不了记忆工具。旧卡由 DSH 主会话用 `memory_search` 按站点和关键词查，用 `memory_open` 看原文；不是向量检索。
 5. 不自动读整页：只看见你选中的文字、框选的截图，和你亲手打的问题。
 6. 「存成看板卡」要另装看板插件（`@pydsl/dsh-board-plugin`，本仓库不含）；没装时点它会提示「看板插件没装或没开」，其余功能不受影响。
-7. Windows 为主，macOS/Linux 没测过。
+7. 只在 Windows 上验过；macOS / Linux 没有安装脚本，插件要手工改 profile 三处（见 [INSTALL.md](INSTALL.md) 附录 A，未验）。
+
+## 想改代码，自己打包
+
+不改源码就不用看这节，直接用 Release 里装好的包。
+
+- 火狐包：在仓库根目录跑 `node build-firefox.mjs`，生成 `_dist-firefox/`（MV2）。开发时看效果：`about:debugging#/runtime/this-firefox` → 临时载入附加组件 → 选 `_dist-firefox/manifest.json`。**临时载入重启浏览器就掉**，只适合开发；正式安装仍用签名包。
+- 打包 / 自签名：`scripts/package-extension.ps1`（出 Chrome zip 和火狐包）、`scripts/sign-firefox.ps1`（交 Mozilla 自动签名，需要 AMO 凭据）。
 
 ## License
 

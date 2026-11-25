@@ -1,4 +1,7 @@
 * text=auto eol=lf
+# Windows 批处理必须是 CRLF，cmd.exe 解析 LF 会错行
+*.bat text eol=crlf
+*.cmd text eol=crlf
 *.png binary
 *.jpg binary
 *.zip binary
