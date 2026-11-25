@@ -1,11 +1,11 @@
-﻿#requires -Version 5.1
+#requires -Version 5.1
 <#
   install-extension.ps1 — 把「随手问」浏览器扩展装进 Chrome / Edge / Firefox / Zen，
   并等它自己报到，好让「装上了没有」不再靠人描述界面。
 
   做四件事（都可重复跑，幂等）：
     1. 找 <Repo>\extension；火狐包 _dist-firefox\manifest.json 缺了就 node build-firefox.mjs 重打
-    2. 打开浏览器的扩展页（Chrome/Edge 是 chrome://extensions，Firefox/Zen 是 about:debugging）
+    2. 打开浏览器的扩展页（Chrome/Edge 是 chrome://extensions，Firefox/Zen 是 about:addons）
     3. 把「要选的那个路径」放进剪贴板，并用资源管理器打开它
     4. 轮询 http://127.0.0.1:3080/page-chat/installed，看到 installed:true 才算真装好
 
@@ -104,9 +104,17 @@ $isFirefox = ($want -eq 'firefox' -or $want -eq 'zen')
 $open = (-not $NoOpen) -and ($want -ne 'none')
 
 if ($isFirefox) {
-  $selectPath = $distManifest
+  # Firefox / Zen 走「从文件安装」正式流程：需要 Mozilla 签过名的 .xpi，
+  # 本地有就复制路径，没有就复制下载地址（发版页里的 latest 永远指向最新签名包）。
+  $signed = Get-ChildItem -Path (Join-Path $Repo 'dist') -Filter '*firefox-signed.xpi' -File -ErrorAction SilentlyContinue |
+    Sort-Object LastWriteTime -Descending | Select-Object -First 1
+  if ($signed) {
+    $selectPath = $signed.FullName
+  } else {
+    $selectPath = 'https://github.com/pydsl43/suishouwen/releases/latest/download/suishouwen-0.4.6-firefox-signed.xpi'
+  }
   $folderToOpen = Split-Path -Parent $distManifest
-  $page = 'about:debugging#/runtime/this-firefox'
+  $page = 'about:addons'
 } else {
   $selectPath = $extensionDir
   $folderToOpen = $extensionDir
@@ -140,9 +148,12 @@ if ($open) {
 Say ''
 Say '接下来三步：'
 if ($isFirefox) {
-  Say '  1) 在打开的 Firefox / Zen 里进入 about:debugging#/runtime/this-firefox'
-  Say '  2) 点「临时载入附加组件…」（Load Temporary Add-on）'
-  Say ('  3) 选这个文件（路径已复制到剪贴板）：' + $selectPath)
+  Say '  1) 在打开的 Firefox / Zen 里进入 about:addons'
+  Say '  2) 右上角齿轮 → 「从文件安装附加组件…」（Install Add-on From File）'
+  Say '  3) 选这个签名包（路径或地址已复制到剪贴板）：' + $selectPath
+  if ($selectPath -like 'http*') {
+    Say '     （剪贴板是下载地址：先在浏览器里打开它把 .xpi 存到本地，再回到第 2 步选文件）'
+  }
 } else {
   $label = 'Chrome'
   if ($want -eq 'edge') { $label = 'Edge' }
