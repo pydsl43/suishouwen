@@ -72,6 +72,68 @@ async function postJson(path, body) {
   });
 }
 
+// ── 装好就报到 ────────────────────────────────────────────────────────────
+// 每次后台启动（MV3 唤醒 / MV2 开机）与安装 / 升级时，往 DSH 报一次版本。
+// DSH 没在跑时请求必然失败 —— 全部静默：不弹错、不写 console，免得每次开浏览器都吵。
+
+function browserNameOf() {
+  const ua = (globalThis.navigator && navigator.userAgent) || '';
+  if (/Firefox\//i.test(ua)) return 'firefox';
+  if (/Chrome\//i.test(ua) && !/Edg\//i.test(ua)) return 'chrome';
+  return 'chromium'; // Edge / 其它 Chromium：分不清就报 chromium
+}
+
+// 当前活动标签的站点名。拿不到（只有 activeTab 权限、页面是 about: 等）就返回空串。
+function activeHostOf() {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (value) => {
+      if (settled) return;
+      settled = true;
+      resolve(value);
+    };
+    const pick = (list) => {
+      const tab = Array.isArray(list) ? list[0] : null;
+      const url = tab && (tab.url || tab.pendingUrl);
+      if (!url) return finish('');
+      try {
+        finish(new URL(url).hostname || '');
+      } catch {
+        finish('');
+      }
+    };
+    try {
+      const tabs = api.tabs || chrome.tabs;
+      if (!tabs || typeof tabs.query !== 'function') return finish('');
+      // Chrome 走回调、Firefox 走 Promise：两边都接，谁先到算谁的。
+      const ret = tabs.query({ active: true, lastFocusedWindow: true }, (list) => {
+        void chrome.runtime.lastError;
+        pick(list);
+      });
+      if (ret && typeof ret.then === 'function') ret.then(pick, () => finish(''));
+      setTimeout(() => finish(''), 1000);
+    } catch {
+      finish('');
+    }
+  });
+}
+
+async function reportInstalled() {
+  try {
+    const version = chrome.runtime.getManifest().version;
+    const page = await activeHostOf();
+    await postJson('/page-chat/ping', { version, browser: browserNameOf(), page });
+  } catch {
+    /* DSH 没在跑 / 权限不够：静默 */
+  }
+}
+
+chrome.runtime.onInstalled.addListener(() => {
+  reportInstalled();
+});
+reportInstalled(); // service worker 每次启动（MV2 每次开浏览器）都报一次
+
+
 // 服务回的是 NDJSON（一行一个 JSON）：ack / delta / done / error。
 // delta 是分段文字，done 只带轮数；这里攒成完整一段再交给小框。
 function readNdjson(raw) {

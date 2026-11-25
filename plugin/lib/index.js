@@ -4,6 +4,8 @@
  * 只注册一条 `/page-chat` 前缀路由（多条会撞「路由已存在」），内部按路径分发：
  *
  *   GET  /page-chat/health          → { ok, dshReady, sessions, version, now }
+ *   POST /page-chat/ping            → 扩展启动时报到（版本 / 浏览器 / 站点），落盘
+ *   GET  /page-chat/installed       → 扩展装没装 / 上次报到的版本与时间
  *   POST /page-chat/ask             → NDJSON：{ack} → {delta}* → {done} / {error}
  *   POST /page-chat/reset           → { ok, dropped }
  *   POST /page-chat/memorize        → 把这段对话压成记忆卡片
@@ -26,6 +28,7 @@
  */
 
 import os from 'node:os';
+import fs from 'node:fs';
 import path from 'node:path';
 import { PageChatSessions } from './session.js';
 import { createMemory, siteOf } from './memory.js';
@@ -290,6 +293,103 @@ function healthHandler(res, sessions) {
     version: PLUGIN_VERSION,
     now: new Date().toISOString(),
   });
+}
+
+/** 安装记录文件名：放在记忆目录同级，重启 DSH 后还能回答「上次装的是哪个版本」。 */
+const INSTALLED_FILE = 'page-chat-installed.json';
+
+/** 从请求体里取一个短字符串字段（非字符串一律当空）。 */
+function textFieldOf(value, limit = 200) {
+  const raw = typeof value === 'string' ? value.trim() : '';
+  return raw.length > limit ? raw.slice(0, limit) : raw;
+}
+
+/**
+ * 扩展报到记录：内存 + 落盘。写盘走「先写 .tmp 再 rename」，半截文件不会顶替好文件。
+ * @param dir - 放 page-chat-installed.json 的目录（记忆目录的同级）。
+ */
+function createInstalledStore(dir) {
+  const file = path.join(dir, INSTALLED_FILE);
+  let last = null;
+  try {
+    const value = JSON.parse(fs.readFileSync(file, 'utf8'));
+    if (value && typeof value.at === 'string' && value.at) {
+      last = {
+        at: value.at,
+        version: textFieldOf(value.version),
+        browser: textFieldOf(value.browser),
+        page: textFieldOf(value.page),
+      };
+    }
+  } catch {
+    /* 没有记录 / 文件坏了：都当「还没装」 */
+  }
+
+  return {
+    file,
+    /** 记一次报到；落盘失败也不影响回 200（内存里仍然有）。 */
+    record(body) {
+      last = {
+        at: new Date().toISOString(),
+        version: textFieldOf(body && body.version),
+        browser: textFieldOf(body && body.browser),
+        page: textFieldOf(body && body.page),
+      };
+      try {
+        fs.mkdirSync(dir, { recursive: true });
+        const tmp = `${file}.tmp`;
+        fs.writeFileSync(tmp, `${JSON.stringify(last, null, 2)}\n`, 'utf8');
+        fs.renameSync(tmp, file);
+      } catch {
+        /* 落盘失败：内存记录照样能回答本次运行的 GET */
+      }
+      return last;
+    },
+    /** 对外形状：没记录时 installed:false。 */
+    view() {
+      if (!last) return { installed: false, version: '', browser: '', page: '', at: '', agoSeconds: null };
+      const at = Date.parse(last.at);
+      return {
+        installed: true,
+        version: last.version,
+        browser: last.browser,
+        page: last.page,
+        at: last.at,
+        agoSeconds: Number.isFinite(at) ? Math.max(0, Math.round((Date.now() - at) / 1000)) : null,
+      };
+    },
+  };
+}
+
+/**
+ * /ping：扩展每次启动报一次到（版本 / 浏览器 / 当前站点），落盘供重启后核对。
+ * 错误一律 400 —— 这个接口只用来记「装上了」，不该抛 500。
+ */
+async function pingHandler(req, res, deps) {
+  let body;
+  try {
+    body = await readJsonBody(req);
+  } catch (error) {
+    sendJson(res, 400, { ok: false, error: messageOf(error) });
+    return;
+  }
+  const version = textFieldOf(body && body.version);
+  const browser = textFieldOf(body && body.browser);
+  const page = textFieldOf(body && body.page);
+  // 三个字段全空 = 一条什么信息都没有的报到；记下来只会把上一次真记录擦成空，所以当坏 body 拒掉。
+  if (!version && !browser && !page) {
+    sendJson(res, 400, { ok: false, error: 'ping 至少要带 version' });
+    return;
+  }
+  const store = deps.installed || createInstalledStore(dshHomeDir());
+  store.record({ version, browser, page });
+  sendJson(res, 200, { ok: true });
+}
+
+/** /installed：给安装脚本 / 助手自检用（不依赖扩展实时在线）。 */
+function installedHandler(res, deps) {
+  const store = deps.installed || createInstalledStore(dshHomeDir());
+  sendJson(res, 200, { ok: true, ...store.view() });
 }
 
 /**
@@ -918,6 +1018,24 @@ export function createHandler(sessions, deps = {}) {
         return;
       }
 
+      if (pathname === `${PREFIX}/ping`) {
+        if (method !== 'POST') {
+          sendJson(res, 405, { ok: false, error: 'ping 只认 POST' });
+          return;
+        }
+        await pingHandler(req, res, deps);
+        return;
+      }
+
+      if (pathname === `${PREFIX}/installed`) {
+        if (method !== 'GET') {
+          sendJson(res, 405, { ok: false, error: 'installed 只认 GET' });
+          return;
+        }
+        installedHandler(res, deps);
+        return;
+      }
+
       if (pathname === `${PREFIX}/ask`) {
         if (method !== 'POST') {
           sendJson(res, 405, { ok: false, error: 'ask 只认 POST' });
@@ -1177,6 +1295,8 @@ export function apply(ctx, config = {}) {
   // 记忆库 / 同步器在 apply 时就建好：路由、系统提示、工具三处共用同一个实例。
   const memoryDir = resolveDir(config.memoryDir, path.join(dshHomeDir(), 'page-chat-memory'));
   const syncDir = resolveDir(config.syncDir, path.join(path.dirname(memoryDir), 'page-chat-sync'));
+  // 扩展报到记录：和记忆目录同级（<DSH_HOME>/page-chat-installed.json）。
+  const installed = createInstalledStore(path.dirname(memoryDir));
   let memory = null;
   let sync = null;
   let memoryError = '';
@@ -1202,6 +1322,7 @@ export function apply(ctx, config = {}) {
     memory,
     sync,
     compressor,
+    installed,
     memoryError,
     // 看板基址：默认空 = 按请求 Host 同源推理（一起跑在 DSH web 上）；反代 / 测试时可覆盖。
     boardBase: typeof config.boardBase === 'string' ? config.boardBase : '',

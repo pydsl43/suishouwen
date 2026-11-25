@@ -106,6 +106,20 @@ http://127.0.0.1:3080/page-chat/health
 
 Firefox 的临时扩展在重启浏览器后会消失，要重新载入一次。
 
+### 怎么确认扩展装好了
+
+扩展一加载成功，就会自己向 DSH 报一次到。在终端里跑：
+
+```powershell
+curl.exe http://127.0.0.1:3080/page-chat/installed
+```
+
+看到 `"installed":true` 和 `"version":"0.4.5"` 才算真装上 —— 这条记录是扩展自己写进来的，不是「浏览器界面上看起来有」。
+`version` 是扩展版本，`at` 是最后一次报到时间；DSH 重启后记录仍在（落在磁盘上）。
+看到 `"installed":false` = 扩展没加载成功，或者加载的还是不会报到的旧版。
+
+也可以让脚本替你等：`powershell -ExecutionPolicy Bypass -File .\scripts\install-extension.ps1` 会打开扩展页、把要选的路径放进剪贴板，然后轮询这个地址；看到连上就报「装好了，扩展版本 X 已连上」。
+
 ---
 
 ## 出问题怎么办
@@ -145,5 +159,6 @@ powershell -ExecutionPolicy Bypass -File .\scripts\uninstall.ps1
 - [ ] patch 里只有一段：`Select-String -Path "$env:USERPROFILE\.dsh\profiles\web\cordis.patch.yml" -Pattern 'id: page-chat'` 命中 **1** 行
 - [ ] 后端活着：`(Invoke-WebRequest http://127.0.0.1:3080/page-chat/health -UseBasicParsing).Content` 里 `ok` 和 `dshReady` 都是 `true`
 - [ ] 扩展目录有清单：`Test-Path .\extension\manifest.json` 为 `True`（并已告知用户按上一节手工加载）
+- [ ] 扩展真的连上了：`curl.exe http://127.0.0.1:3080/page-chat/installed` 里 `installed` 为 `true`，且 `version` 与 `extension\manifest.json` 一致（别只看浏览器扩展页有没有卡片）
 
 装的过程中如果改过什么、修过什么，回报时一并说；没验到的（比如用户还没去浏览器点过）要明说「未验」。

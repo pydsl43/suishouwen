@@ -5,7 +5,7 @@
 随口一句，它接得住。
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.4.4-blue)](extension/manifest.json)
+[![Version](https://img.shields.io/badge/version-0.4.5-blue)](extension/manifest.json)
 [![Platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Firefox-4285f4)](#兼容性)
 ![DSH](https://img.shields.io/badge/DSH-%E2%89%A5%200.2.2-111827)
 
@@ -45,6 +45,17 @@
 
 三种走法，从省事到好奇：让 AI 助手读安装单、自己跑一条命令、或者手动一步一步来。
 
+### ⓪ 直接下装好的包
+
+扩展已经由 Mozilla 签过名，不用自己编译：
+
+- **Firefox / Zen**：[`suishouwen-0.4.5-firefox-signed.xpi`](https://github.com/pydsl43/suishouwen/releases/latest/download/suishouwen-0.4.5-firefox-signed.xpi) → 打开 `about:addons` → 右上角齿轮 → **从文件安装附加组件** → 选它。装完就在扩展列表里，重启浏览器不用重新加载。
+- **Chrome / Edge / Brave**：[`suishouwen-0.4.5-chrome.zip`](https://github.com/pydsl43/suishouwen/releases/latest/download/suishouwen-0.4.5-chrome.zip) → 解压 → `chrome://extensions` → 开发者模式 → 加载已解压的扩展程序 → 选解压出来的文件夹。
+
+校验和在同页的 `SHA256SUMS.txt` 里。
+
+**但扩展只是个空壳**：它要连上本机的 DSH 插件才有脑子。所以第一次装还是要往下走 ①或②（装插件），扩展本身这两步就能装好。
+
 ### ① 把它交给你的 AI 助手（推荐）
 
 把下面这段原样丢给你的 AI 助手（能在这台机器上跑命令的都行）：
@@ -68,7 +79,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1            # 真�
 
 装完打开 `http://127.0.0.1:3080/page-chat/health`，看到 `{"ok":true,"dshReady":true,"version":"0.2.0"}` 就成了。
 
-**扩展还是得手工加载**：Chrome / Edge / Brave 打开 `chrome://extensions` → 开发者模式 → 加载已解压的扩展程序 → 选仓库里的 `extension/`；Firefox / Zen 先 `node build-firefox.mjs`，再打开 `about:debugging#/runtime/this-firefox` → 临时载入附加组件 → 选 `_dist-firefox/manifest.json`。
+**扩展这块，两条路**：Firefox / Zen 直接下①里的签名包，`about:addons` → 齿轮 → 从文件安装，一次装好、重启还在；Chrome / Edge / Brave 解压 zip → `chrome://extensions` → 开发者模式 → 加载已解压的扩展程序。想在命令行里多要一步，仓库里有 `scripts/install-extension.ps1`：它会打开对的页面、把路径塞进剪贴板，然后轮询等扩展连上，装好了直接告诉你。装完访问 `http://127.0.0.1:3080/page-chat/installed` 也能自检：看到 `installed:true` 与版本号就是真装上了。
 
 **怎么确认成功**：普通网页里选中 2 个字以上，选区右下角出现「随手问」浮标；点开问一句，能收到回答。
 

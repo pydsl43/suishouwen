@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "随手问（Chrome / Edge）",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "选中文字冒出小胶囊，点一下随手问；也能框选一块截图连同问题一起发，答案在页面里的小框里回你。",
   "permissions": ["activeTab", "scripting", "storage", "contextMenus"],
   "host_permissions": ["http://127.0.0.1:3080/*"],

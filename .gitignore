@@ -18,3 +18,4 @@ memory/
 *.local.json
 .env
 .env.*
+dist/

@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
-  "name": "随手问（Zen / Firefox）",
-  "version": "0.4.4",
+  "name": "随手问",
+  "version": "0.4.5",
   "description": "选中文字冒出小胶囊，点一下随手问；也能框选一块截图连同问题一起发，答案在页面里的小框里回你。",
   "permissions": ["activeTab", "storage", "contextMenus", "scripting", "http://127.0.0.1:3080/*"],
   "background": { "scripts": ["background.js"], "persistent": false },
@@ -11,7 +11,7 @@
   ],
   "browser_specific_settings": {
     "gecko": {
-      "id": "dsh-annotator@local",
+      "id": "suishouwen@pydsl.dev",
       "strict_min_version": "142.0",
       "data_collection_permissions": { "required": ["none"] }
     }
